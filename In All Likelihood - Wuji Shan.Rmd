@@ -13,11 +13,17 @@ library(openxlsx)
 library(mle.tools)
 library(fitdistrplus)
 library(deconvolveR)
+library(knitr)
+library(kableExtra)
 ```
 
-Using R, prepare answers to exercises 4.25, 4.39, and 4.27.
+# Abstract
 
-# Exercise 4.25
+For this project, I decided to follow In All Likelihood track as my main focus. The first part of this report is the coding part for Exercise 4.25, 4.39, 4.27, and the Illinois Rain Analysis. Then I stated my learning during the working and the future plan between the coding and the reference part.
+
+# In All Likelihood
+
+## 1. Exercise 4.25
 
 Suppose U1,..., Un are an iid sample from the standard uniform distribution, and let U1,..., Un be the order statistics. Investigate the approximation median for n = 5 and n = 10.
 
@@ -25,6 +31,7 @@ Suppose U1,..., Un are an iid sample from the standard uniform distribution, and
 f <- function(x, mu = 0, sigma = 1) dunif(x, mu, sigma)
 F <- function(x, mu = 0, sigma = 1) punif(x, mu, sigma, lower.tail = FALSE)
 
+# probability distributions of order statistics
 integrand <- function(x, r, n){
   x * (1 - F(x))^(r - 1) * F(x)^(n - r) * f(x)
 }
@@ -55,9 +62,9 @@ E(5, 10)
 medianUi(5, 10)
 ```
 
-# Exercise 4.39
+## 2. Exercise 4.39
 
-The data are the average adult weight (in kg) of 28 species of animal. Use the Box-Xoc transformation family to find which transform would be sensible to analyse or present the data.
+The data are the average adult weight (in kg) of 28 species of animal. Use the Box-Cox transformation family to find which transform would be sensible to analyse or present the data.
 
 ```{r}
 weight <- c(0.4, 1.0, 1.9, 3.0, 5.5, 8.1, 12.1, 
@@ -71,10 +78,12 @@ hist(weight, main = "Histogram of Weight Before Transformation")
 ```
 
 ```{r}
+# boxcox transformation of the initial model
 modeltran <- boxcox(lm(weight ~ 1))
 ```
 
 ```{r}
+# find the maximum of lambda
 l <- modeltran$x[which.max(modeltran$y)]
 l
 ```
@@ -84,7 +93,7 @@ weight2 <- (weight ^ l - 1) / l
 hist(weight2, main = "Histogram of Weight After Transformation")
 ```
 
-# Exercise 4.27
+## 3. Exercise 4.27
 
 The data is the average amount of rainfall (in mm/hour) per storm in a series of storms in Valencia, southwest Ireland. Data from two months are reported below.
 
@@ -102,7 +111,7 @@ July <- c(0.30, 0.22, 0.10, 0.12, 0.20, 0.10, 0.10, 0.10, 0.10, 0.10,
           0.25, 0.10, 0.20, 0.10)
 ```
 
-## (a)
+### (a)
 Compare the summary statistics for the two months.
 
 ```{r}
@@ -112,82 +121,58 @@ summary(Jan)
 summary(July)
 ```
 
-From the summary of two months, we can observe that standard deviation of January's data is higher than that of July.
+From the summary of two months, we can observe that January's statistics, except the minimum, are all higher than July's statistics.
 
-## (b)
+### (b)
 Look at the QQ-plot of the data and, based on the shape, suggest what model is reasonable.
 
+Here is the normal QQ-plot for January:
 ```{r}
 qqnorm(Jan, pch = 1, frame = FALSE)
 qqline(Jan, col = "steelblue", lwd = 2)
 ```
 
+Here is the normal QQ-plot for July:
 ```{r}
 qqnorm(July, pch = 1, frame = FALSE)
 qqline(July, col = "steelblue", lwd = 2)
 ```
 
-Based on the shape of QQ-plots, we can observe that the sample does not follow normal distribution. Generalized linear model may be a reasonable method.
+Based on the shape of QQ-plots, we can observe that the sample does not follow normal distribution. We may try gamma distribution model to fit the data later.
 
-## (c)
+### (c)
 Fit a gamma model to the data from each month. Report the MLEs and standard errors, and draw the profile likelihoods for the mean parameters. Compare the parameters from the two months.
 
 ```{r}
-fun <- function(x){
-  alpha <- x[1]
-  beta <- x[2]
-  p <- dgamma(month, shape = alpha, scale = 1 / beta)
-  result <- -1 * sum(log(p))
-  return(result)
-}
+Jan_fit <- fitdist(Jan, "gamma", "mle")
+Jan_fit
 ```
 
 ```{r}
-p <- array(c(0.4, 0.4), dim = c(2, 1))
-
-month <- Jan
-ans_jan <- nlm(f = fun, p, hessian = T)
-ans_jan$estimate
-```
-```{r}
-sqrt(diag(solve(ans_jan$hessian)))
+July_fit <- fitdist(July, "gamma", "mle")
+July_fit
 ```
 
+Since July's MLE is higher then that of January, July's model is better than January's.
+
+For Jan_fit:
 ```{r}
-month <- July
-ans_july <- nlm(f = fun, p, hessian = T)
-ans_july$estimate
-```
-```{r}
-sqrt(diag(solve(ans_july$hessian)))
+plot(Jan_fit)
 ```
 
-Since July's likelihood is higher then that of January, July's model is better than January's.
-
+For July_fit:
 ```{r}
-log_lik <- function(y){
-  a <- (optim(1, function(z) - sum(log(dgamma(x, y, z)))))$par
-  result <- -sum(log(dgamma(x, y, a)))
-  return(result)
-}
+plot(July_fit)
 ```
 
 ```{r}
-x <- Jan
-vx <- seq(0.1, 3, length = 50)
-vl <- -Vectorize(log_lik)(vx)
-plot(vx, vl, type = "l")
+exp(Jan_fit$loglik)
+exp(July_fit$loglik)
 ```
 
-```{r}
-x <- July
+January's parameter is much lower than that of July.
 
-vx <- seq(0.1, 3, length = 50)
-vl <- -Vectorize(log_lik)(vx)
-plot(vx, vl, type = "l")
-```
-
-## (d)
+### (d)
 Check the adequacy of the gamma model using a gamma QQ-plot.
 
 ```{r}
@@ -221,9 +206,9 @@ From the Gamma distribution QQ-plots, it seems that July's model is better.
 
 \pagebreak
 
-# Illionois Rain Analysis
+## 4. Illinois Rain Analysis
 
-## First Step
+### First Step
 Use the data to identify the distribution of rainfall produced by the storms in southern Illinois. Estimate the parameters of the distribution using MLE. Prepare a discussion of your estimation, including how confident you are about your identification of the distribution and the accuracy of your parameter estimates.
 
 ```{r}
@@ -252,46 +237,40 @@ fit_rain <- fitdist(unlist(rain_nona), "gamma", method = "mle")
 summary(bootdist(fit_rain))
 ```
 
-## Second Step
+### Second Step
 Using this distribution, identify wet years and dry years. Are the wet years wet because there were more storms, because individual storms produced more rain, or for both of these reasons?
 
 ```{r}
+# calculate the mean value for the precipitation data in total
 mean <- fit_rain$estimate[1] / fit_rain$estimate[2]
+# calculate the mean value for each year
 app <- apply(rain, 2, mean, na.rm = TRUE)
 
-agg <- c(app, as.numeric(mean))
+agg <- c(app, as.numeric(mean)) %>% round(5)
 names(agg) <- c("1960", "1961", "1962", "1963", "1964", "mean")
 agg
 ```
 
 ```{r}
-rbind(agg, c(nrow(rain) - apply(is.na(rain), 2, sum), '/'))
+storm <- c(nrow(rain) - apply(is.na(rain), 2, sum), '/')
+data.frame(rbind(agg, storm))
 ```
 
-We can observe get some observations when comparing precipitation of each year to the mean value. 1961 and 1963 are wet years, 1962 and 1964 are dry years, and 1960 is normal. Additionally, both of reasons, including more storms and individual storms produced more rain, have affected the amount of precipitation.
+We can observe get some observations when comparing precipitation of each year to the mean value. 1961 and 1963 are wet years, 1962, 1960 and 1964 are dry years. Additionally, both of reasons, including more storms and individual storms produced more rain, have affected the amount of precipitation.
 
-## Third Step
+### Third Step
 To what extent do you believe the results of your analysis are generalizable? What do you think the next steps would be after the analysis? An article by Floyd Huff, one of the authors of the 1967 report is included.
+
+I believe the results of my analysis could be more generalizable if the data set includes data from a larger time range. I think the next steps after the analysis would be the data collection and applying the same analysis steps above to a large data set to check whether the results would change. Since I identified wet and dry years based on the comparison between mean value for each year and the total, if the data set includes data from more years, the mean value in total might change and then lead to the difference of wet and dry years identification results.
+
+# What I learned and Next Steps
+
+For MA 577 this semester, I learned several significant statistical theories as the basis for the principles we apply in statistical practice. I learned a lot about how to describe and demonstrate the approaches used during working. Additionally, readings helped a lot because they includes examples and computation, which helped me to understand theories faster and apply them into practice. Next I will practice skills of not only computing but also presenting.
 
 # Reference:
 
-1. Jin, Yuli
+1. Jin, Yuli. I learned from Yuli a lot because he shared several resources he thought useful to help understand the questions and strategies. Also, for each question, Yuli often tried different methods to solve the problem, which also gives me inspiration both for this project and the future study I believe.
 
 2. https://stackoverflow.com/questions/24211595/order-statistics-in-r?msclkid=fd6683dac5671
 
-3. https://stackoverflow.com/questions/59435824/nlm-with-multiple-variables-in-r  
-
-4. https://www.r-bloggers.com/2015/11/profile-likelihood/
-
-5. https://github.com/qPharmetra/qpToolkit/blob/master/R/qqGamma.r
-
-
-
-
-
-
-
-
-
-
-
+3. https://github.com/qPharmetra/qpToolkit/blob/master/R/qqGamma.r
