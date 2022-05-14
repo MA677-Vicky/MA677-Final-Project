@@ -265,7 +265,7 @@ I believe the results of my analysis could be more generalizable if the data set
 
 # What I learned and Next Steps
 
-For MA 577 this semester, I learned several significant statistical theories as the basis for the principles we apply in statistical practice. I learned a lot about how to describe and demonstrate the approaches used during working. Additionally, readings helped a lot because they includes examples and computation, which helped me to understand theories faster and apply them into practice. Next I will practice skills of not only computing but also presenting.
+For MA 677 this semester, I learned several significant statistical theories as the basis for the principles we apply in statistical practice. I learned a lot about how to describe and demonstrate the approaches used during working. Additionally, readings helped a lot because they includes examples and computation, which helped me to understand theories faster and apply them into practice. Next I will practice skills of not only computing but also presenting.
 
 # Reference:
 
