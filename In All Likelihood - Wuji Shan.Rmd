@@ -48,19 +48,21 @@ medianUi <- function(k, n){
 
 For n = 5:
 ```{r}
-E(2.5, 5)
+E(3, 5)
 ```
 ```{r}
-medianUi(2.5, 5)
+medianUi(3, 5)
 ```
 
 For n = 10:
 ```{r}
-E(5, 10)
+(E(5, 10) + E(6, 10)) /2
 ```
 ```{r}
-medianUi(5, 10)
+(medianUi(5, 10) + medianUi(6, 10)) / 2
 ```
+
+We can observe that the approximate median for n = 5 and n = 10 are same.
 
 ## 2. Exercise 4.39
 
